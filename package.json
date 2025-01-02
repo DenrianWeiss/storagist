@@ -1,0 +1,20 @@
+{
+  "name": "storage_it",
+  "version": "1.0.0",
+  "description": "EVM storage layout online analyzer",
+  "main": "index.ts",
+  "scripts": {
+    "test": "ts-node test.ts"
+  },
+  "author": "DenrianWeiss",
+  "license": "ISC",
+  "dependencies": {
+    "@types/got": "^9.6.12",
+    "got": "^14.4.5",
+    "hyper-express": "^6.17.3",
+    "level": "^9.0.0",
+    "solc": "^0.8.28",
+    "ts-node": "^10.9.2"
+  },
+  "type": "module"
+}

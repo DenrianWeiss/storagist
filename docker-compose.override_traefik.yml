@@ -1,0 +1,19 @@
+services:
+  explorer:
+    networks:
+      - traefik_traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_traefik"
+      - "traefik.http.routers.to-explorer.rule=Host(`60806040.xyz`)" # Replace <SUBDOMAIN> and <DOMAIN> with your domain
+      - "traefik.http.routers.to-explorer.entrypoints=websecure"
+      - "traefik.http.routers.to-explorer.tls=true"
+      - "traefik.http.routers.to-explorer.tls.certresolver=myresolver" # Replace myresolver with your certresolver
+      - "traefik.http.services.http-explorer.loadbalancer.server.port=80"
+
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowOriginList=*"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowHeaders=Origin, X-Requested-With, Content-Type, Accept, Authorization"
+      - "traefik.http.middlewares.cors-headers.headers.accessControlAllowMethods=GET, POST, PUT, DELETE, OPTIONS"
+  networks:
+    traefik_traefik:
+      external: true

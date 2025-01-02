@@ -1,0 +1,11 @@
+version: "3"
+
+services:
+  explorer:
+    image: nekogawa/evmstorageapp
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    # Persist data for authentication
+    environment:
+      - APIKEY=your_api_key
