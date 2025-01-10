@@ -318,6 +318,21 @@ function getExplorerLink(address, chainId) {
     return `${IdToExplorer[chainId.toString()]}${address}`; // todo: change to correct link
 }
 
+function slotHash(location, key) {
+    return ethers.utils.keccak256(ethers.utils.solidityPack(["uint256", "uint256"], [location, key]));
+}
+
+function hashSlot(slotId, mappingEntry = "") {
+    // If mappingEntry is not empty, it's a mapping.
+    if (mappingEntry == "") {
+        // Convert slotId to hex and make it 64 characters long
+        const hexSlot = slotId.toString(16).padStart(64, '0');
+        return "0x" + hexSlot;
+    } else {
+        return slotHash(ethers.utils.hexZeroPad(mappingEntry, 32), slotId);
+    }
+}
+
 function renderDocument(result, chainId) {
     // If error is not empty, render error message
     if (result.error) {
@@ -365,5 +380,21 @@ async function renderthis() {
     let doc = renderDocument(result, chainId);
     // Finally, set the document
     document.getElementById('view').innerHTML = doc;
+}
+
+async function fetchStorage() {
+    // First get rpc
+    let url = window.location.href;
+    let rpc = document.getElementById('rpc').value;
+    let contractAddress = url.split('/')[4];
+    let slotId = document.getElementById('storage_slot').value;
+    let mapKey = document.getElementById('map_key').value;
+    let hashKey = hashSlot(slotId, mapKey);
+    if (rpc == "") {
+        document.getElementById('storage_content').innerText = "RPC is not provided, return slot instead: " + hashKey;
+    }
+    let provider = new ethers.providers.JsonRpcProvider(rpc);
+    let storage = await provider.getStorageAt(contractAddress, hashKey, "latest"); 
+    document.getElementById('storage_content').innerText = storage;
 }
 

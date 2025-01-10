@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.2/dist/css/mdui.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.2/dist/js/mdui.min.js"></script>
+    <script crossorigin="anonymous"
+            integrity="sha512-FDcVY+g7vc5CXANbrTSg1K5qLyriCsGDYCE02Li1tXEYdNQPvLPHNE+rT2Mjei8N7fZbe0WLhw27j2SrGRpdMg=="
+            referrerpolicy="no-referrer"
+            src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <script src="/render.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
@@ -15,11 +19,21 @@
         <span class="mdui-typo-title">Storage Layout Explorer</span>
         <div class="mdui-toolbar-spacer"></div>
     </div>
-    <div class="mdui-container mdui-valign">
-        <div class="mdui-typo" id="view">
+    <div class="mdui-container">
+        <div class="mdui-typo" id="view" style="width: 100%;"></div>
             <p>Waiting to load</p>
         </div>
     </div>
+    <div class="mdui-typo mdui-container">
+        <h2>Storage Fetcher</h2>
+        <label for="storage_slot" class="mdui-textfield-label">Storage Entry</label>
+        <input type="text" id="storage_slot" name="storage_slot" class="mdui-textfield-input" style="width: 100%;">
+        <label for="map_key" class="mdui-textfield-label">Map Key</label>
+        <input type="text" id="map_key" name="map_key" class="mdui-textfield-input" style="width: 100%;">
+        <label for="rpc" class="mdui-textfield-label">Chain RPC</label>
+        <input type="text" id="rpc" name="rpc" class="mdui-textfield-input" style="width: 100%;">
+        <button class="mdui-btn" onclick="fetchStorage()">Fetch</button>
+        <p id="storage_content"></p>
+    </div>
 </body>
-
 </html>
