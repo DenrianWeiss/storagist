@@ -378,6 +378,7 @@ async function renderthis() {
     let result = await response.json();
     // Render the document
     let doc = renderDocument(result, chainId);
+    document.getElementById("addr") = contractAddress;
     // Finally, set the document
     document.getElementById('view').innerHTML = doc;
 }
