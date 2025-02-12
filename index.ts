@@ -8,6 +8,11 @@ webserver.get('/', (req: any, res: any) => {
     res.sendFile('static/index.html');
 });
 
+webserver.get('/compare', (req: any, res: any) => {
+    // Serve static compare.html
+    res.sendFile('static/compare.html');
+});
+
 webserver.get('/index.js', (req: any, res: any) => {
     // Serve static index.js
     res.sendFile('static/index.js');
