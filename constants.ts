@@ -23,6 +23,18 @@ export const chainIdToChainInfo = {
         api: "api.polygonscan.com",
         apiKey: "",
     },
+    "146": {
+        name: "sonic",
+        rpc: "https://rpc.soniclabs.com",
+        api: "api.sonicscan.io",
+        apiKey: "",
+    },
+    "1329": {
+        name: "sei",
+        rpc: "https://evm-rpc.sei-apis.com",
+        api: "",
+        apiKey: "",
+    },
     "42161": {
         name: "arbitrum",
         rpc: "https://arbitrum.meowrpc.com",
