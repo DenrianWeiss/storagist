@@ -172,7 +172,7 @@ function findContractsInOutputs(contractName: any, compiledOutput: any) {
 async function pullContract(address: string, chainId: string) {
     let url = `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getsourcecode&address=${address}&apikey=${APIKEY}`;
     if (NonEtherscanChains[chainId]) {
-        url = `${NonEtherscanChains[chainId]}api?chainid=${chainId}&module=contract&action=getsourcecode&address=${address}`;
+        url = `${NonEtherscanChains[chainId]}api?module=contract&action=getsourcecode&address=${address}`;
     }
     const response = await got(url);
     const data = JSON.parse(response.body);
