@@ -5,6 +5,10 @@ import * as cache from "./cache";
 // Use dotenv to load the API key
 const APIKEY = process.env.APIKEY;
 
+const NonEtherscanChains ={
+    "1329": "https://seitrace.com/pacific-1/"
+}
+
 class ContractFetchResponse {
     error: string;
     artifact: any;
@@ -24,14 +28,57 @@ async function loadSolcAsync(version: string): Promise<any> {
     });
 }
 
+async function parseBlockScoutOut(input: any) {
+    let sourceCode: { [index: string]: any } = {}
+    input.AdditionalSources.forEach((src: any) => {
+        sourceCode[(src.Filename)] = {
+            "content": src.SourceCode
+        }
+    });
+    sourceCode[(input.FileName)] = { content: input.SourceCode };
+    return JSON.stringify(sourceCode);
+}
+
 function fixVerifiedSource(
     source: string,
     contractName: string,
     compilerVersion: string,
     optimizationEnabled: boolean,
     runs: string,
-    evmVersion: string
+    evmVersion: string,
+    isBlockScout: boolean
 ) {
+    if (isBlockScout) {
+        let parsedSrc = JSON.parse(source);
+        let fixed = {
+            language: "Solidity",
+            sources: parsedSrc,
+            settings: {
+                outputSelection: {
+                    "*": {
+                        "*": ["abi", "storageLayout"],
+                    },
+                },
+                optimizer: {
+                    enabled: optimizationEnabled,
+                },
+                metadata: {
+                    bytecodeHash: "ipfs",
+                },
+                libraries: {},
+            },
+        };
+        fixed = fixed as any;
+
+        if (optimizationEnabled) {
+            Object.defineProperty(fixed.settings.optimizer, "runs", runs);
+        }
+
+        if (evmVersion != "Default" && evmVersion != "default") {
+            Object.defineProperty(fixed.settings, "evmVersion", evmVersion);
+        }
+        return JSON.stringify(fixed);
+    }
     // If the source begins with "{{", remove the first and last {
     if (source.at(0) == "{" && source.at(1) == "{") {
         source = source.slice(1, source.length - 1);
@@ -66,7 +113,7 @@ function fixVerifiedSource(
         Object.defineProperty(fixed.settings.optimizer, "runs", runs);
     }
 
-    if (evmVersion != "Default") {
+    if (evmVersion != "Default" && evmVersion != "default") {
         Object.defineProperty(fixed.settings, "evmVersion", evmVersion);
     }
     return JSON.stringify(fixed);
@@ -76,7 +123,7 @@ async function compileInput(input: any) {
     const contractName = input?.ContractName;
     const compilerVersion = input?.CompilerVersion;
     const optimizationEnabled = input?.OptimizationEnabled === "1";
-    let sourceCode = input?.SourceCode;
+    let sourceCode = input.AdditionalSources ? await parseBlockScoutOut(input) : input?.SourceCode;
     const runs = input?.Runs;
     const evmVersion = input?.EVMVersion;
     // Sanity check
@@ -96,7 +143,8 @@ async function compileInput(input: any) {
         compilerVersion,
         optimizationEnabled,
         runs,
-        evmVersion
+        evmVersion,
+        input.AdditionalSources ? true : false
     );
     let parsedCompileInput = JSON.parse(sourceCode);
     parsedCompileInput.settings.outputSelection = {
@@ -122,7 +170,10 @@ function findContractsInOutputs(contractName: any, compiledOutput: any) {
 }
 
 async function pullContract(address: string, chainId: string) {
-    const url = `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getsourcecode&address=${address}&apikey=${APIKEY}`;
+    let url = `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getsourcecode&address=${address}&apikey=${APIKEY}`;
+    if (NonEtherscanChains[chainId]) {
+        url = `${NonEtherscanChains[chainId]}api?chainid=${chainId}&module=contract&action=getsourcecode&address=${address}`;
+    }
     const response = await got(url);
     const data = JSON.parse(response.body);
     return data;
