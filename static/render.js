@@ -347,6 +347,7 @@ function renderDocument(result, chainId) {
         <p>Proxy Contract, Implementation Address: <a href="${getExplorerLink(result.implementationAddress, chainId)}">${result.implementationAddress}</a>
         </p></div>`;
     }
+    renderOut += `<h2>Storage Layout Entries</h2>`;
     // Render storage layout
     let layoutTable = `<table class="mdui-table mdui-table-hoverable">
     <thead>
