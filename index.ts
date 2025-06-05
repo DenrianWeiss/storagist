@@ -23,6 +23,10 @@ webserver.get('/render.js', (req: any, res: any) => {
     res.sendFile('static/render.js');
 });
 
+webserver.get('/render_type.js', (req: any, res: any) => {
+    res.sendFile('static/render_type.js');
+})
+
 
 webserver.get('/api', (req: any, res: any) => {
     res.send('Usage: /api/chainId/address\n You want use ui? not yet implemented');

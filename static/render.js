@@ -366,6 +366,7 @@ function renderDocument(result, chainId) {
     }
     layoutTable += `</table>`;
     renderOut += layoutTable;
+    renderOut += generateStorageLayoutHTML(result);
     return renderOut;
     // todo: render types
 }
