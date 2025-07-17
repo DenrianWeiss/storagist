@@ -38,8 +38,10 @@ webserver.get('/api/:chainId/:address', async (req: any, res: any) => {
         res.send('Chain not supported, contact the developer at 60806040#kunagisa.moe');
         return;
     }
+    // Get forceEvmole from query params
+    const forceEvmole = req.query?.forceEvmole === '1';
     // Call the contract fetcher
-    let contract = await utils.fetchContract(req.params.address, req.params.chainId);
+    let contract = await utils.fetchContract(req.params.address, req.params.chainId, forceEvmole);
     // Return the result in JSON format
     res.json(contract);
 });

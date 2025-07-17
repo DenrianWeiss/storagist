@@ -370,10 +370,15 @@ function renderDocument(result, chainId) {
     }
     layoutTable += `</table>`;
     renderOut += layoutTable;
-    renderOut += `<h2>Storage Layout Detail</h2>`;
-    renderOut += generateStorageLayoutHTML(result);
-    renderOut += `<h2>Structs and Types</h2>`;
-    renderOut += generateStructLayout(result);
+    if (!result?.evmole) {
+        // Do not render types if evmole is present
+        renderOut += `<h2>Storage Layout Detail</h2>`;
+        renderOut += generateStorageLayoutHTML(result);
+        renderOut += `<h2>Structs and Types</h2>`;
+        renderOut += generateStructLayout(result);
+    } else {
+        renderOut += `Storage Info is fetched from evmole, which does not provide detailed storage layout.`;
+    }
     return renderOut;
     // todo: render types
 }
@@ -405,7 +410,7 @@ async function fetchStorage() {
         document.getElementById('storage_content').innerText = "RPC is not provided, return slot instead: " + hashKey;
     }
     let provider = new ethers.providers.JsonRpcProvider(rpc);
-    let storage = await provider.getStorageAt(contractAddress, hashKey, "latest"); 
+    let storage = await provider.getStorageAt(contractAddress, hashKey, "latest");
     document.getElementById('storage_content').innerText = storage;
 }
 
