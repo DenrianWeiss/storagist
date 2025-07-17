@@ -6,6 +6,7 @@ import * as cache from "./cache";
 const APIKEY = process.env.APIKEY;
 
 const NonEtherscanChains ={
+    "239": "https://explorer.tac.build/",
     "1329": "https://seitrace.com/pacific-1/"
 }
 
@@ -71,11 +72,11 @@ function fixVerifiedSource(
         fixed = fixed as any;
 
         if (optimizationEnabled) {
-            Object.defineProperty(fixed.settings.optimizer, "runs", runs);
+            Object.defineProperty(fixed.settings.optimizer, "runs", {value: runs});
         }
 
         if (evmVersion != "Default" && evmVersion != "default") {
-            Object.defineProperty(fixed.settings, "evmVersion", evmVersion);
+            Object.defineProperty(fixed.settings, "evmVersion", {value: evmVersion});
         }
         return JSON.stringify(fixed);
     }
@@ -122,9 +123,9 @@ function fixVerifiedSource(
 async function compileInput(input: any) {
     const contractName = input?.ContractName;
     const compilerVersion = input?.CompilerVersion;
-    const optimizationEnabled = input?.OptimizationEnabled === "1";
+    const optimizationEnabled = input?.OptimizationEnabled === "1" || input?.OptimizationUsed === "true";
     let sourceCode = input.AdditionalSources ? await parseBlockScoutOut(input) : input?.SourceCode;
-    const runs = input?.Runs;
+    const runs = input?.Runs ? input.Runs : input?.OptimizationRuns ? input.OptimizationRuns : "200";
     const evmVersion = input?.EVMVersion;
     // Sanity check
     if (!contractName || !compilerVersion || !sourceCode || !evmVersion) {
@@ -147,6 +148,9 @@ async function compileInput(input: any) {
         input.AdditionalSources ? true : false
     );
     let parsedCompileInput = JSON.parse(sourceCode);
+    if (input?.CompilerSettings) {
+        parsedCompileInput.settings = input.CompilerSettings;
+    }
     parsedCompileInput.settings.outputSelection = {
         "*": {
             "*": ["abi", "storageLayout"],
@@ -264,11 +268,11 @@ export async function fetchContract(address: string, chainId: string): Promise<C
             }
         }
         let contract = contractData.result[0];
-        if (contract.Proxy == "1") {
+        if (contract.Proxy == "1" || contract.IsProxy == "true") {
             console.log("Contract is a proxy, Wait 5s and retrying...");
-            console.log("Implementation: ", contract.Implementation);
             isProxy = true;
-            implementationAddress = contract.Implementation;
+            implementationAddress = contract.Implementation ? contract.Implementation : contract.ImplementationAddress;
+            console.log("Implementation: ", implementationAddress);
             // Set cache
             await cache.saveCache(chainId, address, {
                 isPresent: true,
@@ -278,7 +282,7 @@ export async function fetchContract(address: string, chainId: string): Promise<C
                 storageLayout: "",
             });
             await new Promise((resolve) => setTimeout(resolve, 200));
-            contractData = await pullContract(contract.Implementation, chainId);
+            contractData = await pullContract(implementationAddress, chainId);
             if (contractData.status != "1") {
                 console.log("Contract not found");
                 return {

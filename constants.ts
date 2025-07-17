@@ -29,6 +29,12 @@ export const chainIdToChainInfo = {
         api: "api.sonicscan.io",
         apiKey: "",
     },
+    "239": {
+        name: "tac",
+        rpc: "https://rpc.tac.build",
+        api: "",
+        apiKey: "",
+    },
     "1329": {
         name: "sei",
         rpc: "https://evm-rpc.sei-apis.com",

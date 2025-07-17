@@ -310,6 +310,7 @@ const IdToExplorer = {
     "56": "https://bscscan.com/address/",
     "137": "https://polygonscan.com/address/",
     "146": "https://sonicscan.org/address/",
+    "239": "https://explorer.tac.build/address/",
     "1329": "https://seitrace.com/address/",
     "42161": "https://arbiscan.io/address/",
     "43114": "https://snowscan.xyz/address/",
