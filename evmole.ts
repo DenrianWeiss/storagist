@@ -1,6 +1,30 @@
 import { createPublicClient, http, Address} from 'viem';
 import { contractInfo }  from 'evmole';
 import { chainIdToChainInfo } from './constants';
+import got from "got";
+
+async function fetchSignatures(signatures: string[]): Promise<Record<string, any>> {
+    // Build url for the request
+    const url = `https://api.openchain.xyz/signature-database/v1/lookup?function=${signatures.join(',')}&filter=true`;
+    const response = await got(url)
+    // Parse the response
+    const data = JSON.parse(response.body);
+    if (!data.ok) {
+        return {};
+    }
+    return data?.result?.function || {};
+}
+
+function resolveSig(sigDb: Record<string, any>, selector: string): string {
+    // Check if the selector exists in the database
+    selector = "0x"+ selector
+    if (sigDb[selector]) {
+        // If it exists, return the name
+        return sigDb[selector][0]?.name || selector;
+    }
+    // If it doesn't exist, return an empty string
+    return selector;
+}
 
 export async function runEvmole(chainId: string, address: string) {
     // First get the rpc from chainId:
@@ -57,6 +81,7 @@ export async function runEvmole(chainId: string, address: string) {
     // Create a fake artifact
     let artifact = {}
     artifact['selectors'] = {}
+    let selectorArray = [];
     for (const selector of result.functions) {
         artifact['selectors'][selector.selector] = {
             selector: selector.selector,
@@ -64,6 +89,15 @@ export async function runEvmole(chainId: string, address: string) {
             arguments: selector.arguments,
             stateMutability: selector.stateMutability,
         }
+        selectorArray.push("0x" + selector.selector);
+    }
+    // Fetch selector resolved names
+    const signatures = await fetchSignatures(selectorArray);
+    // Backfill the names
+    for (const selector of selectorArray) {
+        // Remove 0x prefix
+        let selectorOrig = selector.replace(/^0x/, '');
+        artifact['selectors'][selectorOrig].name = resolveSig(signatures, selectorOrig);
     }
     let storageLayout = {};
     let storage = [];
@@ -74,14 +108,14 @@ export async function runEvmole(chainId: string, address: string) {
         const firstReadFunction = entry.reads?.[0];
         const firstWriteFunction = entry.writes?.[0];
         let name = "";
-        if (firstReadFunction) {
-            name = "r_" + firstReadFunction;
+        for (const read of entry.reads || []) {
+            name += "r_" + resolveSig(signatures, read) + "_";
         }
-        if (firstWriteFunction) {
-            name += `w_${firstWriteFunction}`;
+        for (const write of entry.writes || []) {
+            name += "w_" + resolveSig(signatures, write) + "_";
         }
         if (name === "") {
-            name = "unknown";
+            name = "unknown_";
         }
         // Generate a 4 byte hex key
         const randomPostFix = Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0');
