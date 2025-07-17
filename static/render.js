@@ -348,7 +348,9 @@ function renderDocument(result, chainId) {
         <p>Proxy Contract, Implementation Address: <a href="${getExplorerLink(result.implementationAddress, chainId)}">${result.implementationAddress}</a>
         </p></div>`;
     }
-    renderOut += `<h2>Storage Layout Entries</h2>`;
+    renderOut += `<h2>Storage Layout Entries</h2>
+    
+        <p>If some of the storage data is not shown, it may because the contract is using EIP-7201</p>`;
     // Render storage layout
     let layoutTable = `<table class="mdui-table mdui-table-hoverable">
     <thead>

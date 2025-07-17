@@ -216,7 +216,8 @@ export async function fetchContract(address: string, chainId: string): Promise<C
                 }
             }
             let contract = contractData.result[0];
-            let resp = await fetchContract(contract.Implementation, chainId);
+            let implementationAddress = contract.Implementation ? contract.Implementation : contract.ImplementationAddress;
+            let resp = await fetchContract(implementationAddress, chainId);
             if (resp.error) {
                 return {
                     error: resp.error,
@@ -229,7 +230,7 @@ export async function fetchContract(address: string, chainId: string): Promise<C
                 error: "",
                 artifact: resp.artifact,
                 isProxy: true,
-                implementationAddress: contract.Implementation,
+                implementationAddress: implementationAddress,
             }
         } else {
             return {
@@ -269,7 +270,7 @@ export async function fetchContract(address: string, chainId: string): Promise<C
         }
         let contract = contractData.result[0];
         if (contract.Proxy == "1" || contract.IsProxy == "true") {
-            console.log("Contract is a proxy, Wait 5s and retrying...");
+            console.log("Contract is a proxy, Wait and retrying...");
             isProxy = true;
             implementationAddress = contract.Implementation ? contract.Implementation : contract.ImplementationAddress;
             console.log("Implementation: ", implementationAddress);
