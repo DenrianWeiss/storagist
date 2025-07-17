@@ -362,6 +362,12 @@ function renderDocument(result, chainId) {
     </thead>
     `;
     for (let storage of result.artifact.storageLayout.storage) {
+        // Process label if it's too long
+        if (storage.label.length > 60) {
+            // Split to 60 characters and re-join with newline
+            let split = storage.label.match(/.{1,60}/g);
+            storage.label = split.join("<br>");
+        }
         layoutTable += `<tr>
         <td>${storage.slot}</td>
         <td>${storage.label}</td>
