@@ -10,11 +10,13 @@
   "license": "ISC",
   "dependencies": {
     "@types/got": "^9.6.12",
+    "evmole": "^0.8.0",
     "got": "^14.4.5",
     "hyper-express": "^6.17.3",
     "level": "^9.0.0",
     "solc": "^0.8.28",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "viem": "^2.32.0"
   },
   "type": "module"
 }

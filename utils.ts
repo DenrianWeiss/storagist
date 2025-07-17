@@ -2,10 +2,11 @@ import solcjs from "solc";
 import got from "got";
 import * as consts from "./constants";
 import * as cache from "./cache";
+import { runEvmole } from "./evmole";
 // Use dotenv to load the API key
 const APIKEY = process.env.APIKEY;
 
-const NonEtherscanChains ={
+const NonEtherscanChains = {
     "239": "https://explorer.tac.build/",
     "1329": "https://seitrace.com/pacific-1/"
 }
@@ -15,6 +16,7 @@ class ContractFetchResponse {
     artifact: any;
     isProxy: boolean;
     implementationAddress: string;
+    evmole?: boolean;
 }
 
 async function loadSolcAsync(version: string): Promise<any> {
@@ -72,11 +74,11 @@ function fixVerifiedSource(
         fixed = fixed as any;
 
         if (optimizationEnabled) {
-            Object.defineProperty(fixed.settings.optimizer, "runs", {value: runs});
+            Object.defineProperty(fixed.settings.optimizer, "runs", { value: runs });
         }
 
         if (evmVersion != "Default" && evmVersion != "default") {
-            Object.defineProperty(fixed.settings, "evmVersion", {value: evmVersion});
+            Object.defineProperty(fixed.settings, "evmVersion", { value: evmVersion });
         }
         return JSON.stringify(fixed);
     }
@@ -183,7 +185,21 @@ async function pullContract(address: string, chainId: string) {
     return data;
 }
 
-export async function fetchContract(address: string, chainId: string): Promise<ContractFetchResponse> {
+async function handleEvmole(chainId: string, address: string) {
+    // Contract not verified, go evmole mode
+    if (process.env.EVMOLE == "disable") {
+        return {
+            error: "Contract not verified",
+            artifact: null,
+            isProxy: false,
+            implementationAddress: "",
+        }
+    } else {
+        return await runEvmole(chainId, address);
+    }
+}
+
+export async function fetchContract(address: string, chainId: string, forceEvmole?: boolean): Promise<ContractFetchResponse> {
     // First try to pull the contract from the cache
     let contractInCache = await cache.loadCache(chainId, address);
     if (contractInCache.isPresent) {
@@ -217,7 +233,7 @@ export async function fetchContract(address: string, chainId: string): Promise<C
             }
             let contract = contractData.result[0];
             let implementationAddress = contract.Implementation ? contract.Implementation : contract.ImplementationAddress;
-            let resp = await fetchContract(implementationAddress, chainId);
+            let resp = await fetchContract(implementationAddress, chainId, forceEvmole);
             if (resp.error) {
                 return {
                     error: resp.error,
@@ -231,8 +247,12 @@ export async function fetchContract(address: string, chainId: string): Promise<C
                 artifact: resp.artifact,
                 isProxy: true,
                 implementationAddress: implementationAddress,
+                evmole: resp.evmole, // Pass evmole flag
             }
         } else {
+            if (forceEvmole) {
+                return await handleEvmole(chainId, address);
+            }
             return {
                 error: "",
                 artifact: JSON.parse(contractInCache.storageLayout),
@@ -261,12 +281,7 @@ export async function fetchContract(address: string, chainId: string): Promise<C
             }
         }
         if (contractData.result[0].SourceCode == "") {
-            return {
-                error: "Contract not verified",
-                artifact: null,
-                isProxy: false,
-                implementationAddress: "",
-            }
+            return await handleEvmole(chainId, address)
         }
         let contract = contractData.result[0];
         if (contract.Proxy == "1" || contract.IsProxy == "true") {
